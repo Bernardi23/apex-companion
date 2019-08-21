@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:transparent_image/transparent_image.dart';
 
@@ -115,6 +116,10 @@ class _SearchPageState extends State<SearchPage>
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
+    );
+
     return AnimatedBuilder(
         animation: _animationController,
         builder: (context, _) {
@@ -162,7 +167,7 @@ class _SearchPageState extends State<SearchPage>
 
   Widget _platformButton(String platform) {
     return GestureDetector(
-      onTap: () => setState(() => _animateButtons(platform)),
+      onTap: () => _animateButtons(platform),
       child: Image.network(
         platformData[platform][1],
         width: 40,

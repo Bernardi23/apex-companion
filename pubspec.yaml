@@ -21,6 +21,7 @@ dependencies:
     sdk: flutter
   http: ^0.12.0+2
   transparent_image: ^1.0.0
+  giffy_dialog: 1.3.0
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +45,9 @@ flutter:
         - asset: assets/fonts/ProductSans-Bold.ttf
         - asset: assets/fonts/ProductSans-Regular.ttf
         - asset: assets/fonts/ProductSans-Thin.ttf
+    - family: Feather
+      fonts:
+        - asset: assets/fonts/feather.ttf
 
   #
   # For details regarding fonts from package dependencies,

@@ -12,10 +12,8 @@ void main() => runApp(ApexCompanion());
 class ApexCompanion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent),
-    );
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: SearchPage(),
       theme: ThemeData(fontFamily: 'Google Sans'),
     );
