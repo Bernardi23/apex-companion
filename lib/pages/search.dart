@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import 'package:transparent_image/transparent_image.dart';
 
-import 'home.dart';
 import 'results.dart';
 
 class SearchPage extends StatefulWidget {
@@ -40,8 +39,11 @@ class _SearchPageState extends State<SearchPage>
   Animation _startMoveAnimation;
   bool _hasStarted;
 
+  TextEditingController _textController;
+
   @override
   void initState() {
+    _textController = TextEditingController();
     _selectedPlatform = 'psn';
     _isAnimating = false;
     _hasStarted = false;
@@ -124,9 +126,16 @@ class _SearchPageState extends State<SearchPage>
         animation: _animationController,
         builder: (context, _) {
           return Scaffold(
-              // resizeToAvoidBottomPadding: false,
-              backgroundColor: Color(0xffCD3333),
-              body: Opacity(
+            body: Container(
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xffCD3333), Color(0xFFD93248)],
+                  end: Alignment.bottomRight,
+                  begin: Alignment.topLeft,
+                ),
+              ),
+              child: Opacity(
                 opacity: !_hasStarted ? _startOpacityAnimation.value : 1.0,
                 child: SingleChildScrollView(
                   child: Column(
@@ -137,14 +146,18 @@ class _SearchPageState extends State<SearchPage>
                         height: !_hasStarted ? _startMoveAnimation.value : 0.0,
                       ),
                       _buildLogo(context),
-                      SizedBox(height: 120.0),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.25,
+                      ),
                       _buildUserInput(),
                       SizedBox(height: 60.0),
                       _buildPlatformButtons(_animationController)
                     ],
                   ),
                 ),
-              ));
+              ),
+            ),
+          );
         });
   }
 
@@ -188,14 +201,16 @@ class _SearchPageState extends State<SearchPage>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 50),
       child: TextField(
+        controller: _textController,
         onSubmitted: (input) => _searchUser(input),
         style: TextStyle(color: Colors.white, fontSize: 20.0),
         cursorColor: platformData[_selectedPlatform][0],
         cursorWidth: 2.0,
         decoration: InputDecoration(
           suffix: GestureDetector(
+            onTap: () => _searchUser(_textController.value.text),
             child: Icon(
-              Icons.search,
+              IconData(0xE8BD, fontFamily: "Feather"),
               color: Colors.white,
             ),
           ),

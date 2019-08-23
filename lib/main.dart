@@ -1,10 +1,9 @@
-// Flutter Libraries
+// PACKAGES
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Pages
-import 'pages/home.dart';
 import 'pages/search.dart';
+import 'pages/test.dart';
 
 // MAIN Method
 void main() => runApp(ApexCompanion());

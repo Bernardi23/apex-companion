@@ -1,10 +1,16 @@
+// PACKAGES
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
+// THIRD PARTY PACKAGES
+import 'package:http/http.dart' as http;
 import 'package:transparent_image/transparent_image.dart';
 import 'package:giffy_dialog/giffy_dialog.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+// PAGES
+import 'user.dart';
 
 const URL = "https://apextab.com/api/search.php";
 
@@ -16,24 +22,38 @@ class Results extends StatefulWidget {
   _ResultsState createState() => _ResultsState();
 }
 
-class _ResultsState extends State<Results> {
+class _ResultsState extends State<Results> with SingleTickerProviderStateMixin {
   bool _isLoading;
   bool _gotResults;
   var _json;
 
+  AnimationController _transitionController;
+  Animation<double> _opacity;
+
   @override
   void initState() {
+    _transitionController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _opacity = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+      curve: Curves.easeOut,
+      parent: _transitionController,
+    ));
     super.initState();
     _isLoading = true;
     _getUserInfo();
   }
 
   _getUserInfo() async {
+    await _transitionController.forward();
     setState(() => _isLoading = true);
+    await _transitionController.reverse();
     final String finalURL =
         "$URL?platform=${widget.platform}&search=${widget.username}";
     final response = await http.get(finalURL);
 
+    await _transitionController.forward();
     if (response.statusCode == 200) {
       final json = await jsonDecode(response.body);
       setState(() {
@@ -48,8 +68,7 @@ class _ResultsState extends State<Results> {
         _isLoading = false;
       });
     }
-
-    // print("RESPONSE'S BODY [JSON]: ${response.statusCode}");
+    _transitionController.reverse();
   }
 
   @override
@@ -58,25 +77,35 @@ class _ResultsState extends State<Results> {
       SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
     );
 
-    return Scaffold(
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                backgroundColor: Color(0xffCD3333),
-                strokeWidth: 5.0,
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () async => await _getUserInfo(),
-              displacement: 30.0,
-              color: Colors.white,
-              backgroundColor: Color(0xffCD3333),
-              child: buildSearchResults(context),
-            ),
-    );
+    return AnimatedBuilder(
+        animation: _opacity,
+        builder: (context, _) {
+          return Scaffold(
+            body: _isLoading
+                ? Center(
+                    child: Opacity(
+                      opacity: _opacity.value,
+                      child: SpinKitRipple(
+                        color: Color(0xFFD93248),
+                        size: 200.0,
+                      ),
+                    ),
+                  )
+                : Opacity(
+                    opacity: _opacity.value,
+                    child: RefreshIndicator(
+                      onRefresh: () async => await _getUserInfo(),
+                      displacement: 30.0,
+                      color: Colors.white,
+                      backgroundColor: Color(0xFFD93248),
+                      child: _buildSearchResults(context),
+                    ),
+                  ),
+          );
+        });
   }
 
-  Widget buildSearchResults(BuildContext context) {
+  Widget _buildSearchResults(BuildContext context) {
     return ListView(
       children: <Widget>[
         SizedBox(height: 10),
@@ -86,31 +115,32 @@ class _ResultsState extends State<Results> {
             vertical: 25,
           ),
           child: Text(
-            "Search results",
+            "SEARCH RESULTS",
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
               fontSize: 32.0,
             ),
           ),
         ),
         if (_gotResults) for (var user in _json["results"]) userTile(user),
-        if (!_gotResults) ...noResultWidgets(context),
+        if (!_gotResults) ..._noResultWidgets(context),
       ],
     );
   }
 
-  List<Widget> noResultWidgets(BuildContext context) {
+  List<Widget> _noResultWidgets(BuildContext context) {
     return [
-      SizedBox(height: MediaQuery.of(context).size.height / 4),
+      SizedBox(height: MediaQuery.of(context).size.height * 0.15),
       Center(
         child: Icon(
-          Icons.portable_wifi_off,
+          IconData(0xE8B5, fontFamily: "Feather"),
           size: 120.0,
-          color: Color(0xffCD3333).withOpacity(0.8),
+          color: Color(0xFFD93248),
         ),
       ),
-      SizedBox(height: 8),
+      SizedBox(height: 35),
       Center(
         child: Text(
           "No results found".toUpperCase(),
@@ -122,23 +152,21 @@ class _ResultsState extends State<Results> {
           ),
         ),
       ),
-      SizedBox(
-        height: MediaQuery.of(context).size.height / 6,
-      ),
+      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
       IconButton(
         onPressed: () => showDialog(
             context: context,
             builder: (context) {
-              return buildDialog();
+              return _buildDialog();
             }),
-        icon: Icon(Icons.help_outline),
+        icon: Icon(IconData(0xE903, fontFamily: "Feather")),
         iconSize: 32,
-        color: Color(0xffCD3333),
+        color: Color(0xFFD93248),
       ),
     ];
   }
 
-  Widget buildDialog() {
+  Widget _buildDialog() {
     return NetworkGiffyDialog(
       image: Image.network(
         "https://media.tenor.com/images/ea197fb8a4894b65c5392987ac737ac6/tenor.gif",
@@ -147,7 +175,7 @@ class _ResultsState extends State<Results> {
       buttonOkText: Text(
         "DONE!",
         style: TextStyle(
-          color: Colors.red,
+          color: Color(0xFFD93248),
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
@@ -190,7 +218,13 @@ class _ResultsState extends State<Results> {
           ],
         ),
         child: FlatButton(
-          onPressed: () => null,
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserPage(user["aid"]),
+              maintainState: true,
+            ),
+          ),
           splashColor: Colors.red[50],
           highlightColor: Colors.red[50],
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
